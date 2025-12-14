@@ -8,6 +8,7 @@ const regionSelect = document.getElementById("region");
 const guessBtn = document.getElementById("guess-btn");
 const nextBtn = document.getElementById("next-btn");
 const hintBtn = document.getElementById("hint-btn");
+const giveUpBtn = document.getElementById("giveup-btn");
 
 let currentName = "";
 let currentTypes = [];
@@ -28,7 +29,7 @@ const regions = {
   paldea: [899, 1010]
 };
 
-/* random id by region */
+/* random ID by region */
 function randomId() {
   const r = regionSelect.value;
   if (r === "all") return Math.floor(Math.random() * 1010) + 1;
@@ -86,9 +87,6 @@ function reveal(correct) {
   feedback.textContent = correct
     ? `Correct! It's ${name}.`
     : `It's ${name}.`;
-
-  // auto-next after 1.5s
-  if (correct) setTimeout(loadPokemon, 1500);
 }
 
 /* guess */
@@ -101,8 +99,9 @@ function guess() {
 
   if (g === a) {
     reveal(true);
+    setTimeout(loadPokemon, 1500);
   } else {
-    feedback.textContent = "Not quite — try again.";
+    feedback.textContent = "Not quite - try again.";
   }
 }
 
@@ -120,10 +119,17 @@ function hint() {
   stats.textContent = `Hints: ${3 - hintsUsed}`;
 }
 
+/* give up */
+function giveUp() {
+  if (revealed) return;
+  reveal(false);
+}
+
 /* events */
 guessBtn.onclick = guess;
 nextBtn.onclick = loadPokemon;
 hintBtn.onclick = hint;
+giveUpBtn.onclick = giveUp;
 regionSelect.onchange = loadPokemon;
 
 input.addEventListener("keydown", e => {
