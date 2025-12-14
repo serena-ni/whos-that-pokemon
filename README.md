@@ -16,6 +16,10 @@ A fan-made, browser-based game where you guess Pokémon from their silhouette
 
 ---
 
+![Game Screenshot](screenshot.png)
+
+---
+
 ## Credits
 
 - Uses [PokéAPI](https://pokeapi.co/) for Pokémon data and images.
