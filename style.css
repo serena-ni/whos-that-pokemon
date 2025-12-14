@@ -30,8 +30,7 @@ body {
 .card {
   background: var(--card);
   border-radius: 22px;
-  box-shadow:
-    0 20px 40px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.06);
   width: 100%;
   max-width: 520px;
   padding: 24px;
@@ -53,17 +52,15 @@ header p {
 
 .controls {
   display: flex;
+  justify-content: space-between;
   gap: 10px;
   align-items: center;
-  justify-content: space-between;
 }
-
-/* form controls */
 
 select,
 input {
   appearance: none;
-  background: #ffffff;
+  background: #fff;
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -83,12 +80,6 @@ select {
   padding-right: 32px;
 }
 
-input::placeholder {
-  color: var(--muted);
-}
-
-/* buttons */
-
 button {
   cursor: pointer;
   background: var(--accent-soft);
@@ -98,28 +89,11 @@ button {
   padding: 10px 16px;
   font-size: 14px;
   font-weight: 500;
-  transition: background 0.2s ease, transform 0.1s ease;
 }
 
 button:hover {
   background: #d9ebf5;
 }
-
-button:active {
-  transform: translateY(1px);
-}
-
-/* toggle */
-
-.toggle {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: var(--muted);
-}
-
-/* stage */
 
 .stage {
   display: grid;
@@ -138,18 +112,14 @@ button:active {
   transition: filter 0.6s ease, transform 0.6s ease;
 }
 
-/* silhouette */
 .pokemon-wrap.silhouette img {
   filter: brightness(0) contrast(2) blur(2px);
 }
 
-/* reveal */
 .pokemon-wrap.revealed img {
   filter: none;
   transform: scale(1.04);
 }
-
-/* guess */
 
 .guess {
   display: flex;
@@ -159,8 +129,6 @@ button:active {
 .guess input {
   flex: 1;
 }
-
-/* feedback/stats */
 
 .feedback {
   min-height: 22px;
@@ -175,21 +143,9 @@ button:active {
   color: var(--muted);
 }
 
-footer {
-  text-align: center;
-  font-size: 12px;
-  color: var(--muted);
-}
-
-/* mobile */
-
 @media (max-width: 480px) {
   .pokemon-wrap {
     width: 160px;
     height: 160px;
-  }
-
-  button {
-    padding: 12px 16px;
   }
 }
