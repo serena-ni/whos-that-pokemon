@@ -16,61 +16,41 @@ let score = 0;
 let tries = 0;
 let dailyMode = false;
 
-/* regions */
-
 const regions = {
-  kanto: [1, 151],
-  johto: [152, 251],
-  hoenn: [252, 386],
-  sinnoh: [387, 493],
-  unova: [494, 649],
-  kalos: [650, 721],
-  alola: [722, 809],
-  galar: [810, 898],
-  paldea: [899, 1017]
+  kanto: [1,151], johto: [152,251], hoenn: [252,386],
+  sinnoh: [387,493], unova: [494,649], kalos: [650,721],
+  alola: [722,809], galar: [810,898], paldea: [899,1017]
 };
 
 /* helpers */
 
-function normalize(str) {
-  return str.toLowerCase().replace(/[^a-z0-9]/g, "");
-}
+const normalize = s => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+const formatName = n =>
+  n.split("-").map(w => w[0].toUpperCase() + w.slice(1)).join("-");
 
-function formatName(name) {
-  return name
-    .split("-")
-    .map(word => word[0].toUpperCase() + word.slice(1))
-    .join("-");
-}
+const todayKey = () =>
+  `daily-solved-${new Date().toISOString().slice(0,10)}`;
 
 /* daily */
 
-function getDailyId() {
-  const today = new Date().toISOString().slice(0, 10);
-  let seed = 0;
-  for (const c of today) seed += c.charCodeAt(0);
-  return (seed % 1017) + 1;
+function dailyId() {
+  const d = new Date().toISOString().slice(0,10);
+  return ([...d].reduce((a,c)=>a+c.charCodeAt(0),0) % 1017) + 1;
 }
 
 /* ID selection */
 
 function getPokemonId() {
-  if (dailyMode) return getDailyId();
-
-  const region = regionSelect.value;
-  if (region === "all") {
-    return Math.floor(Math.random() * 1017) + 1;
-  }
-  const [min, max] = regions[region];
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+  if (dailyMode) return dailyId();
+  const r = regionSelect.value;
+  if (r === "all") return Math.floor(Math.random()*1017)+1;
+  const [min,max] = regions[r];
+  return Math.floor(Math.random()*(max-min+1))+min;
 }
 
 /* game flow */
 
 async function loadPokemon() {
-  const id = getPokemonId();
-
-  // reset visual + state
   wrap.classList.remove("revealed");
   wrap.classList.add("silhouette");
 
@@ -79,13 +59,19 @@ async function loadPokemon() {
   tries = 0;
   triesEl.textContent = "Tries: 0";
   hintBtn.disabled = true;
-  currentPokemon = null;
 
-  const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
-  const data = await res.json();
+  guessInput.disabled = false;
+  skipBtn.disabled = false;
+  guessBtn.disabled = false;
 
-  currentPokemon = data;
-  img.src = data.sprites.other["official-artwork"].front_default;
+  const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${getPokemonId()}`);
+  currentPokemon = await res.json();
+
+  img.src = currentPokemon.sprites.other["official-artwork"].front_default;
+
+  if (dailyMode && localStorage.getItem(todayKey())) {
+    lockDailySolved();
+  }
 }
 
 function reveal(correct) {
@@ -98,6 +84,33 @@ function reveal(correct) {
   }
 }
 
+/* hint system */
+
+function progressiveHint() {
+  if (!currentPokemon) return "";
+
+  if (tries === 3) {
+    return `Hint: starts with “${formatName(currentPokemon.name)[0]}”`;
+  }
+  if (tries === 4) {
+    return `Hint: type — ${currentPokemon.types.map(t=>t.type.name).join(", ")}`;
+  }
+  if (tries >= 5) {
+    return `Hint: generation ${Math.ceil(currentPokemon.id / 151)}`;
+  }
+  return "";
+}
+
+/* daily lock */
+
+function lockDailySolved() {
+  feedback.textContent = "You’ve solved today’s Pokémon 🌤️";
+  guessInput.disabled = true;
+  guessBtn.disabled = true;
+  skipBtn.disabled = true;
+  hintBtn.disabled = true;
+}
+
 /* events */
 
 guessBtn.onclick = () => {
@@ -108,25 +121,29 @@ guessBtn.onclick = () => {
 
   if (guess === answer) {
     reveal(true);
-    feedback.textContent = `Correct! It's ${formatName(currentPokemon.name)}.`;
-  } else {
-    tries++;
-    triesEl.textContent = `Tries: ${tries}`;
-    feedback.textContent = "Not quite — try again.";
+    feedback.textContent = `Correct! It’s ${formatName(currentPokemon.name)}.`;
 
-    if (tries >= 3) hintBtn.disabled = false;
+    if (dailyMode) {
+      localStorage.setItem(todayKey(), "true");
+      lockDailySolved();
+    }
+    return;
   }
-};
 
-skipBtn.onclick = () => {
-  loadPokemon();
+  tries++;
+  triesEl.textContent = `Tries: ${tries}`;
+
+  const hint = progressiveHint();
+  feedback.textContent = hint || "Not quite — try again.";
+
+  if (tries >= 3) hintBtn.disabled = false;
 };
 
 hintBtn.onclick = () => {
-  if (!currentPokemon) return;
-  feedback.textContent =
-    `Hint: starts with “${formatName(currentPokemon.name)[0]}”`;
+  feedback.textContent = progressiveHint();
 };
+
+skipBtn.onclick = loadPokemon;
 
 dailyToggle.onchange = () => {
   dailyMode = dailyToggle.checked;

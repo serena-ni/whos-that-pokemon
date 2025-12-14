@@ -149,3 +149,26 @@ button:hover {
     height: 160px;
   }
 }
+
+/* animation polish */
+
+.pokemon-wrap img {
+  opacity: 0;
+  animation: fadeIn 0.4s ease forwards;
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+
+.pokemon-wrap.revealed img {
+  transform: scale(1.08);
+  filter: drop-shadow(0 8px 18px rgba(143,188,212,0.45));
+}
+
+/* locked daily state */
+button:disabled,
+input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
