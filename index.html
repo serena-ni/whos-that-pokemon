@@ -2,20 +2,20 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Who's That Pokémon?</title>
   <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Playfair+Display:wght@500&display=swap" rel="stylesheet">
 </head>
 <body>
-  <main class="card">
+  <div class="card">
     <header>
       <h1>Who's That Pokémon?</h1>
-      <p>Guess the Pokémon from its silhouette.</p>
+      <p>Guess the Pokémon shown below!</p>
     </header>
 
     <div class="controls">
-      <select id="regionSelect">
-        <option value="all">All regions</option>
+      <select id="region">
+        <option value="all">All Regions</option>
         <option value="kanto">Kanto</option>
         <option value="johto">Johto</option>
         <option value="hoenn">Hoenn</option>
@@ -26,40 +26,31 @@
         <option value="galar">Galar</option>
         <option value="paldea">Paldea</option>
       </select>
-
-      <label class="toggle">
-        <input type="checkbox" id="dailyToggle" />
-        Daily
-      </label>
     </div>
 
     <div class="stage">
-      <div id="pokemonWrap" class="pokemon-wrap silhouette">
-        <img id="pokemonImg" alt="Pokemon silhouette" />
+      <div class="pokemon-wrap silhouette">
+        <img id="pokemon-img">
       </div>
     </div>
 
     <div class="guess">
-      <input
-        id="guessInput"
-        placeholder="Enter Pokémon name"
-        autocomplete="off"
-      />
-      <button id="guessBtn">Guess</button>
+      <input id="guess-input" placeholder="Type Pokémon name…" autocomplete="off">
+      <button id="guess-btn">Guess</button>
+      <button id="hint-btn">Hint</button>
+    </div>
+
+    <div class="buttons">
+      <button id="next-btn">Next</button>
     </div>
 
     <div class="feedback" id="feedback"></div>
+    <div class="stats" id="stats"></div>
 
-    <div class="controls">
-      <button id="hintBtn" disabled>Hint</button>
-      <button id="skipBtn">Skip</button>
-    </div>
-
-    <footer class="stats">
-      <span>Score: <span id="score">0</span></span>
-      <span id="tries">Tries: 0</span>
+    <footer>
+      <p>data from PokéAPI &middot; fan-made, not for commercial use</p>
     </footer>
-  </main>
+  </div>
 
   <script src="script.js"></script>
 </body>

@@ -143,32 +143,16 @@ button:hover {
   color: var(--muted);
 }
 
+footer p {
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  margin: 10px 0 0;
+}
+
 @media (max-width: 480px) {
   .pokemon-wrap {
     width: 160px;
     height: 160px;
   }
-}
-
-/* animation polish */
-
-.pokemon-wrap img {
-  opacity: 0;
-  animation: fadeIn 0.4s ease forwards;
-}
-
-@keyframes fadeIn {
-  to { opacity: 1; }
-}
-
-.pokemon-wrap.revealed img {
-  transform: scale(1.08);
-  filter: drop-shadow(0 8px 18px rgba(143,188,212,0.45));
-}
-
-/* locked daily state */
-button:disabled,
-input:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }

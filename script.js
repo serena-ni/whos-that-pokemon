@@ -1,159 +1,136 @@
-const img = document.getElementById("pokemonImg");
-const wrap = document.getElementById("pokemonWrap");
-const guessInput = document.getElementById("guessInput");
+const img = document.getElementById("pokemon-img");
+const wrap = document.querySelector(".pokemon-wrap");
+const input = document.getElementById("guess-input");
 const feedback = document.getElementById("feedback");
-const scoreEl = document.getElementById("score");
-const triesEl = document.getElementById("tries");
+const stats = document.getElementById("stats");
+const regionSelect = document.getElementById("region");
 
-const skipBtn = document.getElementById("skipBtn");
-const guessBtn = document.getElementById("guessBtn");
-const hintBtn = document.getElementById("hintBtn");
-const dailyToggle = document.getElementById("dailyToggle");
-const regionSelect = document.getElementById("regionSelect");
+const guessBtn = document.getElementById("guess-btn");
+const nextBtn = document.getElementById("next-btn");
+const hintBtn = document.getElementById("hint-btn");
 
-let currentPokemon = null;
-let score = 0;
-let tries = 0;
-let dailyMode = false;
+let currentName = "";
+let currentTypes = [];
+let currentGen = 1;
+let revealed = false;
+let hintsUsed = 0;
 
+/* region ranges */
 const regions = {
-  kanto: [1,151], johto: [152,251], hoenn: [252,386],
-  sinnoh: [387,493], unova: [494,649], kalos: [650,721],
-  alola: [722,809], galar: [810,898], paldea: [899,1017]
+  kanto: [1, 151],
+  johto: [152, 251],
+  hoenn: [252, 386],
+  sinnoh: [387, 493],
+  unova: [494, 649],
+  kalos: [650, 721],
+  alola: [722, 809],
+  galar: [810, 898],
+  paldea: [899, 1010]
 };
 
-/* helpers */
-
-const normalize = s => s.toLowerCase().replace(/[^a-z0-9]/g, "");
-const formatName = n =>
-  n.split("-").map(w => w[0].toUpperCase() + w.slice(1)).join("-");
-
-const todayKey = () =>
-  `daily-solved-${new Date().toISOString().slice(0,10)}`;
-
-/* daily */
-
-function dailyId() {
-  const d = new Date().toISOString().slice(0,10);
-  return ([...d].reduce((a,c)=>a+c.charCodeAt(0),0) % 1017) + 1;
-}
-
-/* ID selection */
-
-function getPokemonId() {
-  if (dailyMode) return dailyId();
+/* random id by region */
+function randomId() {
   const r = regionSelect.value;
-  if (r === "all") return Math.floor(Math.random()*1017)+1;
-  const [min,max] = regions[r];
-  return Math.floor(Math.random()*(max-min+1))+min;
+  if (r === "all") return Math.floor(Math.random() * 1010) + 1;
+
+  const [min, max] = regions[r];
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-/* game flow */
-
+/* load pokemon */
 async function loadPokemon() {
-  wrap.classList.remove("revealed");
-  wrap.classList.add("silhouette");
-
+  revealed = false;
+  hintsUsed = 0;
   feedback.textContent = "";
-  guessInput.value = "";
-  tries = 0;
-  triesEl.textContent = "Tries: 0";
-  hintBtn.disabled = true;
+  stats.textContent = "Hints: 3";
+  input.value = "";
+  input.disabled = false;
+  input.focus();
 
-  guessInput.disabled = false;
-  skipBtn.disabled = false;
-  guessBtn.disabled = false;
+  wrap.classList.add("silhouette");
+  wrap.classList.remove("revealed");
 
-  const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${getPokemonId()}`);
-  currentPokemon = await res.json();
+  const id = randomId();
+  const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+  const data = await res.json();
 
-  img.src = currentPokemon.sprites.other["official-artwork"].front_default;
-
-  if (dailyMode && localStorage.getItem(todayKey())) {
-    lockDailySolved();
-  }
+  currentName = data.name;
+  currentTypes = data.types.map(t => t.type.name);
+  currentGen = getGeneration(id);
+  img.src = data.sprites.other["official-artwork"].front_default;
 }
 
+/* generation by ID */
+function getGeneration(id) {
+  for (const r in regions) {
+    const [min, max] = regions[r];
+    if (id >= min && id <= max) return r;
+  }
+  return "Unknown";
+}
+
+/* normalize */
+function normalize(str) {
+  return str.toLowerCase().replace(/[^a-z]/g, "");
+}
+
+/* reveal */
 function reveal(correct) {
+  revealed = true;
+  input.disabled = true;
   wrap.classList.remove("silhouette");
   wrap.classList.add("revealed");
 
-  if (correct) {
-    score++;
-    scoreEl.textContent = score;
+  const name = currentName[0].toUpperCase() + currentName.slice(1);
+
+  feedback.textContent = correct
+    ? `Correct! It's ${name}.`
+    : `It's ${name}.`;
+
+  // auto-next after 1.5s
+  if (correct) setTimeout(loadPokemon, 1500);
+}
+
+/* guess */
+function guess() {
+  if (revealed) return;
+  const g = normalize(input.value);
+  const a = normalize(currentName);
+
+  if (!g) return;
+
+  if (g === a) {
+    reveal(true);
+  } else {
+    feedback.textContent = "Not quite — try again.";
   }
 }
 
-/* hint system */
+/* hint */
+function hint() {
+  if (revealed || hintsUsed >= 3) return;
+  hintsUsed++;
 
-function progressiveHint() {
-  if (!currentPokemon) return "";
+  let text;
+  if (hintsUsed === 1) text = `Starts with "${currentName[0].toUpperCase()}"`;
+  else if (hintsUsed === 2) text = `Type: ${currentTypes.join(", ")}`;
+  else text = `Generation: ${currentGen[0].toUpperCase() + currentGen.slice(1)}`;
 
-  if (tries === 3) {
-    return `Hint: starts with “${formatName(currentPokemon.name)[0]}”`;
-  }
-  if (tries === 4) {
-    return `Hint: type — ${currentPokemon.types.map(t=>t.type.name).join(", ")}`;
-  }
-  if (tries >= 5) {
-    return `Hint: generation ${Math.ceil(currentPokemon.id / 151)}`;
-  }
-  return "";
-}
-
-/* daily lock */
-
-function lockDailySolved() {
-  feedback.textContent = "You’ve solved today’s Pokémon 🌤️";
-  guessInput.disabled = true;
-  guessBtn.disabled = true;
-  skipBtn.disabled = true;
-  hintBtn.disabled = true;
+  feedback.textContent = text;
+  stats.textContent = `Hints: ${3 - hintsUsed}`;
 }
 
 /* events */
+guessBtn.onclick = guess;
+nextBtn.onclick = loadPokemon;
+hintBtn.onclick = hint;
+regionSelect.onchange = loadPokemon;
 
-guessBtn.onclick = () => {
-  if (!currentPokemon) return;
-
-  const guess = normalize(guessInput.value);
-  const answer = normalize(currentPokemon.name);
-
-  if (guess === answer) {
-    reveal(true);
-    feedback.textContent = `Correct! It’s ${formatName(currentPokemon.name)}.`;
-
-    if (dailyMode) {
-      localStorage.setItem(todayKey(), "true");
-      lockDailySolved();
-    }
-    return;
+input.addEventListener("keydown", e => {
+  if (e.key === "Enter") {
+    revealed ? loadPokemon() : guess();
   }
+});
 
-  tries++;
-  triesEl.textContent = `Tries: ${tries}`;
-
-  const hint = progressiveHint();
-  feedback.textContent = hint || "Not quite — try again.";
-
-  if (tries >= 3) hintBtn.disabled = false;
-};
-
-hintBtn.onclick = () => {
-  feedback.textContent = progressiveHint();
-};
-
-skipBtn.onclick = loadPokemon;
-
-dailyToggle.onchange = () => {
-  dailyMode = dailyToggle.checked;
-  loadPokemon();
-};
-
-regionSelect.onchange = () => {
-  if (!dailyMode) loadPokemon();
-};
-
-/* start */
-
+/* init */
 loadPokemon();
