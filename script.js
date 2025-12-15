@@ -1,23 +1,23 @@
-const img = document.getElementById("pokemon-img");
-const wrap = document.querySelector(".pokemon-wrap");
-const input = document.getElementById("guess-input");
+const pokemonImage = document.getElementById("pokemonImage");
+const pokemonWrap = document.getElementById("pokemonWrap");
+const guessInput = document.getElementById("guessInput");
+const guessBtn = document.getElementById("guessBtn");
+const hintBtn = document.getElementById("hintBtn");
+const giveUpBtn = document.getElementById("giveUpBtn");
+const nextBtn = document.getElementById("nextBtn");
 const feedback = document.getElementById("feedback");
-const stats = document.getElementById("stats");
-const regionSelect = document.getElementById("region");
+const hintsRemainingEl = document.getElementById("hintsRemaining");
+const regionSelect = document.getElementById("regionSelect");
 
-const guessBtn = document.getElementById("guess-btn");
-const nextBtn = document.getElementById("next-btn");
-const hintBtn = document.getElementById("hint-btn");
-const giveUpBtn = document.getElementById("giveup-btn");
-
-let currentName = "";
-let currentTypes = [];
-let currentGen = 1;
+let currentPokemon = null;
+let acceptedNames = [];
+let hintsLeft = 3;
 let revealed = false;
-let hintsUsed = 0;
 
-/* region ranges */
-const regions = {
+/* regions */
+
+const REGIONS = {
+  all: [1, 1025],
   kanto: [1, 151],
   johto: [152, 251],
   hoenn: [252, 386],
@@ -25,118 +25,117 @@ const regions = {
   unova: [494, 649],
   kalos: [650, 721],
   alola: [722, 809],
-  galar: [810, 898],
-  paldea: [899, 1010]
+  galar: [810, 905],
+  paldea: [906, 1025]
 };
 
-/* random ID by region */
-function randomId() {
-  const r = regionSelect.value;
-  if (r === "all") return Math.floor(Math.random() * 1010) + 1;
-
-  const [min, max] = regions[r];
+/* helpers */
+function randomPokemonId() {
+  const [min, max] = REGIONS[regionSelect.value];
   return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function normalize(str) {
+  return str
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function titleCase(name) {
+  return name
+    .split(" ")
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
 }
 
 /* load pokemon */
 async function loadPokemon() {
-  revealed = false;
-  hintsUsed = 0;
   feedback.textContent = "";
-  stats.textContent = "Hints: 3";
-  input.value = "";
-  input.disabled = false;
-  input.focus();
+  guessInput.value = "";
+  hintsLeft = 3;
+  revealed = false;
+  hintsRemainingEl.textContent = `Hints: ${hintsLeft}`;
 
-  wrap.classList.add("silhouette");
-  wrap.classList.remove("revealed");
+  pokemonWrap.classList.add("silhouette");
+  pokemonWrap.classList.remove("revealed");
 
-  const id = randomId();
+  const id = randomPokemonId();
   const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
   const data = await res.json();
 
-  currentName = data.name;
-  currentTypes = data.types.map(t => t.type.name);
-  currentGen = getGeneration(id);
-  img.src = data.sprites.other["official-artwork"].front_default;
-}
+  currentPokemon = data;
 
-/* generation by ID */
-function getGeneration(id) {
-  for (const r in regions) {
-    const [min, max] = regions[r];
-    if (id >= min && id <= max) return r;
-  }
-  return "Unknown";
-}
+  pokemonImage.src =
+    data.sprites.other["official-artwork"].front_default ||
+    data.sprites.front_default;
 
-/* normalize */
-function normalize(str) {
-  return str.toLowerCase().replace(/[^a-z]/g, "");
-}
-
-/* reveal */
-function reveal(correct) {
-  revealed = true;
-  input.disabled = true;
-  wrap.classList.remove("silhouette");
-  wrap.classList.add("revealed");
-
-  const name = currentName[0].toUpperCase() + currentName.slice(1);
-
-  feedback.textContent = correct
-    ? `Correct! It's ${name}.`
-    : `It's ${name}.`;
+  const baseName = data.species.name.replace(/-/g, " ");
+  acceptedNames = [
+    normalize(baseName),
+    normalize(data.species.name.split("-")[0])
+  ];
 }
 
 /* guess */
-function guess() {
-  if (revealed) return;
-  const g = normalize(input.value);
-  const a = normalize(currentName);
+function handleGuess() {
+  if (!currentPokemon || revealed) return;
 
-  if (!g) return;
+  const guess = normalize(guessInput.value);
+  if (!guess) return;
 
-  if (g === a) {
-    reveal(true);
-    setTimeout(loadPokemon, 1500);
+  if (acceptedNames.includes(guess)) {
+    revealPokemon(`Correct! It's ${titleCase(currentPokemon.species.name.split("-")[0])}.`);
+    setTimeout(loadPokemon, 1200);
   } else {
-    feedback.textContent = "Not quite - try again.";
+    feedback.textContent = "Not quite — try again.";
   }
 }
 
-/* hint */
-function hint() {
-  if (revealed || hintsUsed >= 3) return;
-  hintsUsed++;
+function revealPokemon(message) {
+  revealed = true;
+  pokemonWrap.classList.remove("silhouette");
+  pokemonWrap.classList.add("revealed");
+  feedback.textContent = message;
+}
 
-  let text;
-  if (hintsUsed === 1) text = `Starts with "${currentName[0].toUpperCase()}"`;
-  else if (hintsUsed === 2) text = `Type: ${currentTypes.join(", ")}`;
-  else text = `Generation: ${currentGen[0].toUpperCase() + currentGen.slice(1)}`;
+/* hints */
+function giveHint() {
+  if (!currentPokemon || revealed || hintsLeft <= 0) return;
 
-  feedback.textContent = text;
-  stats.textContent = `Hints: ${3 - hintsUsed}`;
+  hintsLeft--;
+  hintsRemainingEl.textContent = `Hints: ${hintsLeft}`;
+
+  const name = currentPokemon.species.name.split("-")[0];
+
+  if (hintsLeft === 2) {
+    feedback.textContent = `Hint: Starts with "${name[0].toUpperCase()}"`;
+  } else if (hintsLeft === 1) {
+    const types = currentPokemon.types
+      .map(t => titleCase(t.type.name))
+      .join(" / ");
+    feedback.textContent = `Hint: Type — ${types}`;
+  } else {
+    feedback.textContent = "Last hint used!";
+  }
 }
 
 /* give up */
 function giveUp() {
-  if (revealed) return;
-  reveal(false);
+  if (!currentPokemon || revealed) return;
+  revealPokemon(`It's ${titleCase(currentPokemon.species.name.split("-")[0])}.`);
 }
 
 /* events */
-guessBtn.onclick = guess;
-nextBtn.onclick = loadPokemon;
-hintBtn.onclick = hint;
-giveUpBtn.onclick = giveUp;
-regionSelect.onchange = loadPokemon;
+guessBtn.addEventListener("click", handleGuess);
 
-input.addEventListener("keydown", e => {
-  if (e.key === "Enter") {
-    revealed ? loadPokemon() : guess();
-  }
+guessInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") handleGuess();
 });
+
+hintBtn.addEventListener("click", giveHint);
+giveUpBtn.addEventListener("click", giveUp);
+nextBtn.addEventListener("click", loadPokemon);
+regionSelect.addEventListener("change", loadPokemon);
 
 /* init */
 loadPokemon();
