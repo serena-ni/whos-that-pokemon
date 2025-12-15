@@ -2,19 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Who's That Pokémon?</title>
-  <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Playfair+Display:wght@500&display=swap" rel="stylesheet">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Playfair+Display:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="card">
+
+  <main class="card">
+
     <header>
       <h1>Who's That Pokémon?</h1>
       <p>Guess the Pokémon shown below!</p>
     </header>
 
     <div class="controls">
-      <select id="region">
+      <select id="regionSelect">
         <option value="all">All Regions</option>
         <option value="kanto">Kanto</option>
         <option value="johto">Johto</option>
@@ -28,30 +35,37 @@
       </select>
     </div>
 
-    <div class="stage">
-      <div class="pokemon-wrap silhouette">
-        <img id="pokemon-img">
+    <section class="stage">
+      <div class="pokemon-wrap silhouette" id="pokemonWrap">
+        <img id="pokemonImage" alt="Pokémon silhouette">
       </div>
-    </div>
+    </section>
 
-    <div class="guess">
-      <input id="guess-input" placeholder="Type Pokémon name…" autocomplete="off">
-      <button id="guess-btn">Guess</button>
-      <button id="hint-btn">Hint</button>
-      <button id="giveup-btn">Give Up</button>
-    </div>
+    <section class="guess">
+      <input
+        id="guessInput"
+        type="text"
+        placeholder="Type Pokémon name..."
+        autocomplete="off"
+      />
+      <button id="guessBtn">Guess</button>
+      <button id="hintBtn">Hint</button>
+      <button id="giveUpBtn">Give Up</button>
+    </section>
 
-    <div class="buttons">
-      <button id="next-btn">Next</button>
-    </div>
+    <button id="nextBtn">Next</button>
 
     <div class="feedback" id="feedback"></div>
-    <div class="stats" id="stats"></div>
+
+    <div class="stats">
+      <span id="hintsRemaining">Hints: 3</span>
+    </div>
 
     <footer>
-      <p>Data from PokéAPI &middot; Fan-made, not for commercial use</p>
+      Data from PokéAPI &middot; Fan-made, not for commercial use
     </footer>
-  </div>
+
+  </main>
 
   <script src="script.js"></script>
 </body>

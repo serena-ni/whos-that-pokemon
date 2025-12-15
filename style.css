@@ -143,11 +143,10 @@ button:hover {
   color: var(--muted);
 }
 
-footer p {
+footer {
   text-align: center;
   font-size: 12px;
   color: var(--muted);
-  margin: 10px 0 0;
 }
 
 @media (max-width: 480px) {
