@@ -2,8 +2,6 @@
 
 A fan-made, browser-based game where you guess Pokémon from their silhouette
 
----
-
 ## How to Play
 
 1. Select a Pokémon region (or leave as "All Regions").
@@ -14,14 +12,10 @@ A fan-made, browser-based game where you guess Pokémon from their silhouette
 6. Press **Give Up** to reveal the answer.
 7. Press **Next** to skip to a new Pokémon at any time.
 
----
-
 ![Game Screenshot](screenshot.png)
-
----
 
 ## Credits
 
 - Uses [PokéAPI](https://pokeapi.co/) for Pokémon data and images.
-- Fonts: Inter, Playfair Display.
+- Fonts: [Inter](https://fonts.google.com/specimen/Inter), [Playfair Display](https://fonts.google.com/specimen/Playfair+Display).
 - Fan-made, not for commercial use.
