@@ -87,7 +87,7 @@ function handleGuess() {
     revealPokemon(`Correct! It's ${titleCase(currentPokemon.species.name.split("-")[0])}.`);
     setTimeout(loadPokemon, 1200);
   } else {
-    feedback.textContent = "Not quite — try again.";
+    feedback.textContent = "Not quite - try again.";
   }
 }
 
@@ -113,7 +113,7 @@ function giveHint() {
     const types = currentPokemon.types
       .map(t => titleCase(t.type.name))
       .join(" / ");
-    feedback.textContent = `Hint: Type — ${types}`;
+    feedback.textContent = `Hint: Type - ${types}`;
   } else {
     feedback.textContent = "Last hint used!";
   }
